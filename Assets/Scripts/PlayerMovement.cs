@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
@@ -34,7 +35,7 @@ public class PlayerMovement : MonoBehaviour
 
     private PlayerControls playerControls;
     private Vector2 movement;
-    private Vector2 acceleration;
+    private float acceleration;
 
     #endregion
 
@@ -46,6 +47,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField]
     private float ySpeed = 50f;
 
+    [SerializeField]
+    private float zSpeed = 30f;
+
     #endregion
 
     private void Awake()
@@ -54,7 +58,9 @@ public class PlayerMovement : MonoBehaviour
         // Add event handlers for the joystick input
         playerControls = new PlayerControls();
 
-     
+        playerControls.Gameplay.Accelerate.performed += ctx => acceleration = ctx.ReadValue<float>();
+        playerControls.Gameplay.Accelerate.canceled+= ctx => acceleration = 0f;
+
         playerControls.Gameplay.Move.performed += ctx => movement = ctx.ReadValue<Vector2>();
         playerControls.Gameplay.Move.canceled += ctx => movement = Vector2.zero;
 
@@ -73,61 +79,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        CalculateMovementAndRotation();
-    }
-
-    private void FixedUpdate()
-    {
-        Move();
-        Rotate();
-    }
-
-    private void Move()
-    {
-        transform.localPosition = new Vector3(
-            _xMovementAmountRaw,
-            _yMovementAmountRaw,
-            transform.localPosition.z);
-    }
-
-    private void Rotate()
-    {
-
-        transform.localRotation = Quaternion.Euler(_tiltRotation, _yawRotation, _rollRotation);
+        transform.position += transform.forward * acceleration * zSpeed * Time.fixedDeltaTime;
+        transform.Rotate(-movement.y, 0f, -movement.x);
 
     }
 
-    private void CalculateMovementAndRotation()
-    {
-        // Calculates the ship movement on x and y axis
-        _xMovementAmount = movement.x;
-        _xMovementAmountRaw = Mathf.Clamp(
-            transform.localPosition.x + (_xMovementAmount * xSpeed * Time.fixedDeltaTime), 
-            XMIN, 
-            XMAX);
-
-        _yMovementAmount = movement.y;
-        _yMovementAmountRaw = Mathf.Clamp(
-            transform.localPosition.y + (_yMovementAmount * ySpeed * Time.fixedDeltaTime), 
-            YMIN, 
-            YMAX);
-
-        Debug.Log(_xMovementAmountRaw + " " + _yMovementAmountRaw);
-
-        // Rotation on X Axis
-        // Calculates the tilt angle (pitch up/down) depending on the Y localposition, so that the ship's nose always points straight forward
-        _compensationTiltRotation = -(_yMovementAmountRaw * COMPENSATIONTILTROTATION);
-        _tiltRotation = -(_yMovementAmount * MAXTILTROTATION) + _compensationTiltRotation;
-
-        // Rotation on Y Axis
-        // Calculates the yaw angle (pitch up/down) depending on the X localposition, so that the ship's nose always points straight forward
-        _yawRotation = transform.localPosition.x * COMPENSATIONYAWROTATION;
-
-        // Rotation on Z Axis
-        // Calculates the rolling angle (left/right) 
-        _rollRotation = -(_xMovementAmount * MAXROLLROTATION);
-        
-    }
 
 
 
