@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using UnityStandardAssets.CrossPlatformInput;
+using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -27,9 +27,14 @@ public class PlayerMovement : MonoBehaviour
         _yMovementAmountRaw,
         _rollRotation,
         _yawRotation,
-        _compensationYawRotation,
         _tiltRotation,
         _compensationTiltRotation;
+
+    private Camera camera;
+
+    private PlayerControls playerControls;
+    private Vector2 movement;
+    private Vector2 acceleration;
 
     #endregion
 
@@ -41,14 +46,30 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField]
     private float ySpeed = 50f;
 
-    [SerializeField]
-    private float rollSpeed = 50f;
-
-    [SerializeField]
-    private float tiltSpeed = 50f;
-
     #endregion
 
+    private void Awake()
+    {
+
+        // Add event handlers for the joystick input
+        playerControls = new PlayerControls();
+
+     
+        playerControls.Gameplay.Move.performed += ctx => movement = ctx.ReadValue<Vector2>();
+        playerControls.Gameplay.Move.canceled += ctx => movement = Vector2.zero;
+
+
+    }
+
+    private void OnEnable()
+    {
+        playerControls.Gameplay.Enable();
+    }
+
+    private void OnDisable()
+    {
+        playerControls.Gameplay.Disable();
+    }
 
     private void Update()
     {
@@ -79,17 +100,19 @@ public class PlayerMovement : MonoBehaviour
     private void CalculateMovementAndRotation()
     {
         // Calculates the ship movement on x and y axis
-        _xMovementAmount = CrossPlatformInputManager.GetAxis("Horizontal") ;
+        _xMovementAmount = movement.x;
         _xMovementAmountRaw = Mathf.Clamp(
             transform.localPosition.x + (_xMovementAmount * xSpeed * Time.fixedDeltaTime), 
             XMIN, 
             XMAX);
 
-        _yMovementAmount = CrossPlatformInputManager.GetAxis("Vertical");
+        _yMovementAmount = movement.y;
         _yMovementAmountRaw = Mathf.Clamp(
             transform.localPosition.y + (_yMovementAmount * ySpeed * Time.fixedDeltaTime), 
             YMIN, 
             YMAX);
+
+        Debug.Log(_xMovementAmountRaw + " " + _yMovementAmountRaw);
 
         // Rotation on X Axis
         // Calculates the tilt angle (pitch up/down) depending on the Y localposition, so that the ship's nose always points straight forward
