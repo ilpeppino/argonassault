@@ -21,34 +21,30 @@ public class PlayerMovement : MonoBehaviour
 
     #region Private variables
 
-    private float
-        _xMovementAmount,
-        _xMovementAmountRaw,
-        _yMovementAmount,
-        _yMovementAmountRaw,
-        _rollRotation,
-        _yawRotation,
-        _tiltRotation,
-        _compensationTiltRotation;
-
-    private Camera camera;
 
     private PlayerControls playerControls;
     private Vector2 movement;
-    private float acceleration;
+    private float
+        acceleration,
+        calculatedSpeed,
+        leftRightRotation,
+        upDownRotation;
 
     #endregion
 
     #region Serialized fields
 
     [SerializeField]
-    private float xSpeed = 50f;
+    private float leftRightSpeed = 100f;
 
     [SerializeField]
-    private float ySpeed = 50f;
+    private float upDownSpeed = 100f;
 
     [SerializeField]
-    private float zSpeed = 30f;
+    private float forwardSpeed = 100f;
+
+    [SerializeField]
+    private float minimumSpeed = 0.4f;
 
     #endregion
 
@@ -79,11 +75,29 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        transform.position += transform.forward * acceleration * zSpeed * Time.fixedDeltaTime;
-        transform.Rotate(-movement.y, 0f, -movement.x);
+
+        leftRightRotation = -movement.y * upDownSpeed;
+        upDownRotation = -movement.x * leftRightSpeed;
+
+
+        if (acceleration == 0f) 
+        { 
+            calculatedSpeed = minimumSpeed * forwardSpeed; 
+        }
+        else 
+        {
+            calculatedSpeed = acceleration * forwardSpeed;
+        }
 
     }
 
+    private void FixedUpdate()
+    {
+
+        transform.position += transform.forward * calculatedSpeed * Time.fixedDeltaTime;
+
+        transform.Rotate(leftRightRotation * Time.fixedDeltaTime, 0f,  upDownRotation * Time.fixedDeltaTime);
+    }
 
 
 
