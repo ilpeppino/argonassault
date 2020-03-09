@@ -2,22 +2,13 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+// TODO implement banking while rotatin left and right
+
 public class PlayerMovement : MonoBehaviour
 {
 
-    #region Constant variables
-
-    private const float
-        XMIN = -6.5f,
-        XMAX = 6.5f,
-        YMIN = -4f,
-        YMAX = 4f,
-        MAXROLLROTATION = 45f,
-        MAXTILTROTATION = 20f,
-        COMPENSATIONTILTROTATION = 5f,
-        COMPENSATIONYAWROTATION = 5f;
-
-    #endregion
+    private ParticleSystem projectiles;
+    private Rigidbody rb;
 
     #region Private variables
 
@@ -28,7 +19,8 @@ public class PlayerMovement : MonoBehaviour
         acceleration,
         calculatedSpeed,
         leftRightRotation,
-        upDownRotation;
+        upDownRotation,
+        shootProjectile;
 
     #endregion
 
@@ -60,7 +52,21 @@ public class PlayerMovement : MonoBehaviour
         playerControls.Gameplay.Move.performed += ctx => movement = ctx.ReadValue<Vector2>();
         playerControls.Gameplay.Move.canceled += ctx => movement = Vector2.zero;
 
+        //playerControls.Gameplay.Shoot.performed += ctx => Shoot();
+        playerControls.Gameplay.Shoot.performed += ctx => shootProjectile = ctx.ReadValue<float>();
+        playerControls.Gameplay.Shoot.canceled += ctx => shootProjectile = 0f;
 
+
+        // Cache references
+        projectiles = GetComponent<ParticleSystem>();
+        rb = GetComponent<Rigidbody>();
+
+    }
+
+
+    void OnPlayerCollision()
+    {
+        Debug.Log("Frozen controls");
     }
 
     private void OnEnable()
@@ -75,30 +81,80 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        // movement.x gives the up/down movement of the stick (rotation on x-axis)
+        // movement.y gives the left/right movement of the stick (rotation on u-axis)
 
-        leftRightRotation = -movement.y * upDownSpeed;
-        upDownRotation = -movement.x * leftRightSpeed;
+        DetermineMovement();
+        ShootProjectile();
 
+    }
 
-        if (acceleration == 0f) 
-        { 
-            calculatedSpeed = minimumSpeed * forwardSpeed; 
+    private void ShootProjectile()
+    {
+        if (shootProjectile >= Mathf.Epsilon)
+        {
+            Debug.Log("FIRE");
+            projectiles.Play();
         }
-        else 
+
+    }
+
+    private void DetermineMovement()
+    {
+        leftRightRotation = -movement.y * leftRightSpeed;
+        upDownRotation = -movement.x * upDownSpeed;
+
+
+        if (acceleration == 0f)
+        {
+            calculatedSpeed = minimumSpeed * forwardSpeed;
+        }
+        else
         {
             calculatedSpeed = acceleration * forwardSpeed;
         }
-
     }
 
     private void FixedUpdate()
     {
 
+/*        float posX = 0f;
+                float posY = movement.y;
+                float posZ = 1f;
+
+                Vector3 newPos = new Vector3(posX, posY, posZ);
+
+                Debug.Log(posX + " " + posY + " " + posZ);
+
+        Quaternion newRotation = transform.rotation;
+        Vector3 newEulerAngles = newRotation.eulerAngles;
+
+       
+*/
+
+
+
         transform.position += transform.forward * calculatedSpeed * Time.fixedDeltaTime;
 
         transform.Rotate(leftRightRotation * Time.fixedDeltaTime, 0f,  upDownRotation * Time.fixedDeltaTime);
-    }
 
+        if (leftRightRotation > 0)
+        {
+            rb.AddTorque(Vector3.left * Time.fixedDeltaTime * 100f);
+            Debug.Log("Banking right");
+
+        }
+        else if (leftRightRotation < 0)
+        {
+            rb.AddTorque(Vector3.right * Time.fixedDeltaTime * 100f);
+            Debug.Log("Banking left");
+            
+        }
+
+
+
+
+    }
 
 
 }

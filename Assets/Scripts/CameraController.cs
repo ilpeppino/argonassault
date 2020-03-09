@@ -26,8 +26,6 @@ public class CameraController : MonoBehaviour
         leftRightRotation = -cameraMovement.y * leftRightMaxAngle;
         upDownRotation = -cameraMovement.x * upDownMaxAngle;
 
-        Debug.Log(leftRightRotation + " " + upDownRotation);
-
     }
 
     private void FixedUpdate()
