@@ -14,6 +14,7 @@ public class PlayerMovement : MonoBehaviour
 
 
     private PlayerControls playerControls;
+    private bool isControlEnabled;
     private Vector2 movement;
     private float
         acceleration,
@@ -36,7 +37,7 @@ public class PlayerMovement : MonoBehaviour
     private float forwardSpeed = 100f;
 
     [SerializeField]
-    private float minimumSpeed = 0.4f;
+    private float minimumSpeed = 0.1f;
 
     #endregion
 
@@ -56,6 +57,7 @@ public class PlayerMovement : MonoBehaviour
         playerControls.Gameplay.Shoot.performed += ctx => shootProjectile = ctx.ReadValue<float>();
         playerControls.Gameplay.Shoot.canceled += ctx => shootProjectile = 0f;
 
+        isControlEnabled = true;
 
         // Cache references
         projectiles = GetComponent<ParticleSystem>();
@@ -67,6 +69,7 @@ public class PlayerMovement : MonoBehaviour
     void OnPlayerCollision()
     {
         Debug.Log("Frozen controls");
+        isControlEnabled = false;
     }
 
     private void OnEnable()
@@ -83,9 +86,11 @@ public class PlayerMovement : MonoBehaviour
     {
         // movement.x gives the up/down movement of the stick (rotation on x-axis)
         // movement.y gives the left/right movement of the stick (rotation on u-axis)
-
-        DetermineMovement();
-        ShootProjectile();
+        if (isControlEnabled)
+        {
+            DetermineMovement();
+            ShootProjectile();
+        }
 
     }
 
@@ -136,20 +141,31 @@ public class PlayerMovement : MonoBehaviour
 
         transform.position += transform.forward * calculatedSpeed * Time.fixedDeltaTime;
 
+/*        Quaternion target = Quaternion.Euler(leftRightRotation, 0f, upDownRotation);
+
+        transform.rotation = Quaternion.Slerp(transform.rotation, target, Time.fixedDeltaTime * 5f);*/
+
+
+
+        // transform.rotation = Quaternion.RotateTowards(transform.rotation, target, Time.fixedDeltaTime * 50f);
+
         transform.Rotate(leftRightRotation * Time.fixedDeltaTime, 0f,  upDownRotation * Time.fixedDeltaTime);
 
+
+/*
         if (leftRightRotation > 0)
         {
-            rb.AddTorque(Vector3.left * Time.fixedDeltaTime * 100f);
+            rb.AddForceAtPosition(Vector3.left * leftRightRotation, transform.position);
             Debug.Log("Banking right");
 
         }
         else if (leftRightRotation < 0)
         {
-            rb.AddTorque(Vector3.right * Time.fixedDeltaTime * 100f);
+            rb.AddForceAtPosition(Vector3.right * leftRightRotation, transform.position);
             Debug.Log("Banking left");
-            
+
         }
+        else rb.AddForceAtPosition(Vector3.forward * 10f, transform.position);*/
 
 
 

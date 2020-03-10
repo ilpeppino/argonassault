@@ -38,10 +38,13 @@ public class AudioManager : MonoBehaviour
         {
             Debug.Log("Destroying new AudioManager");
             Destroy(this);
-        }
-
+        } else
+        
         Debug.Log("This: " + this);
         DontDestroyOnLoad(this);
+        
+
+
     }
 
     #endregion
@@ -56,8 +59,8 @@ public class AudioManager : MonoBehaviour
         {
             Destroy(this);
             return;
-        }
-
+        }  
+        
         DontDestroyOnLoad(this);
 
     }
