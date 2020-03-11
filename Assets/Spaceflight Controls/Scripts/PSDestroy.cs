@@ -4,6 +4,7 @@ using System.Collections;
 public class PSDestroy : MonoBehaviour {
 
 	// Use this for initialization
+	[System.Obsolete]
 	void Start () {
 		Destroy(gameObject, GetComponent<ParticleSystem>().duration);
 	}
